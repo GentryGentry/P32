@@ -104,7 +104,7 @@
     width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     border: 1.5px solid var(--dim); cursor: pointer; transition: all 0.15s;
-    background: transparent;
+    background: transparent; touch-action: manipulation;
   }
   .checkbox.checked { background: var(--accent); border-color: var(--accent); }
   .checkbox.checked svg path { stroke: #000; }
@@ -258,7 +258,7 @@
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const LS_KEY = "p32_v4";
-const TARGET = new Date("2025-12-10");
+const TARGET = new Date("2026-12-10");
 const START  = new Date("2026-03-10");
 
 const ROTATION = [
@@ -407,11 +407,11 @@ function renderToday() {
     const loggedWeights = D.weights[ex.name];
     const lastLogged = loggedWeights && loggedWeights.length ? loggedWeights[loggedWeights.length-1].weight : null;
     const placeholder = lastLogged !== null ? lastLogged : (ex.dw !== null && ex.dw !== undefined ? ex.dw : "");
-    const checkSVG = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5l3 3 6-7" stroke="${isDone?'#000':'#fff'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const checkSVG = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5l3 3 6-7" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const meta = [ex.sets&&ex.sets!=="—"?ex.sets+" set":"", ex.reps].filter(Boolean).join(" · ");
     return `
       <div class="ex-row">
-        <div class="checkbox ${isDone?'checked':''}" onclick="toggleEx(${JSON.stringify(ex.name)})">${isDone?checkSVG:''}</div>
+        <button onclick="toggleEx(${JSON.stringify(ex.name)})" style="width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isDone?'var(--accent)':'transparent'};border:${isDone?'none':'1.5px solid var(--dim)'};cursor:pointer;padding:0">${isDone?checkSVG:''}</button>
         <div style="flex:1">
           <div class="ex-name ${isDone?'done':''}">${ex.name}</div>
           ${meta?`<div class="ex-meta">${meta}</div>`:''}
