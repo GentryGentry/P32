@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="P32">
+<meta name="theme-color" content="#0a0a0a">
+<title>P32 Träning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #171717;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #666;
+    --dim: #3a3a3a;
+    --green: #4ade80;
+    --red: #f87171;
+    --accent: #e8ff47;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  /* TOP BAR */
+  #topbar {
+    padding: calc(var(--safe-top) + 14px) 20px 14px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #topbar .brand { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.18em; color: var(--accent); }
+  #topbar .saved { font-size: 11px; color: var(--muted); transition: color 0.3s; }
+  #topbar .saved.ok { color: var(--green); }
+
+  /* TABS */
+  #tabs {
+    display: flex; gap: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+  #tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 12px 18px;
+    font-size: 13px; font-weight: 500;
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* SCROLL AREA */
+  #content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 16px 16px calc(var(--safe-bot) + 16px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 10px;
+  }
+  .card.dark { background: var(--bg); border-color: var(--border); }
+  .card-title { font-size: 10px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px; font-family: 'DM Mono', monospace; }
+
+  /* PASS HEADER */
+  .pass-header {
+    background: linear-gradient(135deg, #1a1a0e 0%, #141414 100%);
+    border: 1px solid #333;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 10px;
+  }
+  .pass-header .label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 8px; }
+  .pass-header .name { font-size: 20px; font-weight: 700; margin-bottom: 14px; line-height: 1.2; }
+  .progress-bar { background: var(--dim); border-radius: 99px; height: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
+  .progress-text { font-size: 11px; color: var(--muted); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+  /* EXERCISE ROWS */
+  .ex-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ex-row:last-child { border-bottom: none; }
+  .checkbox {
+    width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--dim); cursor: pointer; transition: all 0.15s;
+    background: transparent;
+  }
+  .checkbox.checked { background: var(--accent); border-color: var(--accent); }
+  .checkbox.checked svg path { stroke: #000; }
+  .ex-name { font-size: 14px; font-weight: 500; flex: 1; transition: color 0.2s; }
+  .ex-name.done { color: var(--muted); text-decoration: line-through; }
+  .ex-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .weight-input {
+    width: 64px; background: var(--surface2); border: 1px solid var(--dim);
+    border-radius: 8px; padding: 7px 8px; font-size: 13px; color: var(--text);
+    text-align: center; font-family: 'DM Mono', monospace;
+  }
+  .weight-input:focus { outline: none; border-color: var(--accent); }
+  .weight-unit { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%; background: var(--accent); color: #000;
+    border: none; border-radius: 12px; padding: 16px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: opacity 0.15s;
+    margin-top: 4px;
+  }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-secondary {
+    flex: 1; background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-dark {
+    flex: 2; background: var(--accent); color: #000;
+    border: none; border-radius: 10px; padding: 14px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; }
+  .stat-label { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; font-weight: 600; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .stat-val { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+
+  /* LOG ROWS */
+  .log-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .log-row:last-child { border-bottom: none; }
+  .log-type { font-size: 13px; font-weight: 500; }
+  .log-date { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .log-dots { display: flex; gap: 4px; font-size: 13px; }
+
+  /* COUNTDOWN */
+  .countdown-num { font-size: 52px; font-weight: 700; letter-spacing: -3px; line-height: 1; color: var(--accent); font-family: 'DM Mono', monospace; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 300; backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    background: var(--surface);
+    border-radius: 18px 18px 0 0;
+    padding: 24px 20px calc(var(--safe-bot) + 30px);
+    width: 100%; max-width: 640px;
+    transform: translateY(30px); transition: transform 0.25s;
+    border-top: 1px solid var(--border);
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal-sheet { transform: translateY(0); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; font-family: 'DM Mono', monospace; }
+
+  /* TOGGLE ROW */
+  .toggle-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .toggle-row:last-of-type { border-bottom: none; }
+  .toggle-label { font-size: 14px; }
+
+  /* INPUT */
+  .field {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; font-size: 13px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; margin-top: 12px;
+  }
+  .field:focus { outline: none; border-color: var(--accent); }
+  select.field { appearance: none; }
+
+  /* BARS */
+  .bar-chart { display: flex; gap: 3px; align-items: flex-end; height: 36px; margin-top: 14px; }
+  .bar { flex: 1; border-radius: 3px; background: var(--dim); min-height: 4px; transition: background 0.2s; }
+  .bar.latest { background: var(--accent); }
+
+  /* WEIGHT CARD */
+  .weight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 10px; }
+  .w-name { font-size: 14px; font-weight: 600; }
+  .w-count { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .w-val { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'DM Mono', monospace; }
+  .w-delta { font-size: 11px; margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+  .empty { text-align: center; padding: 48px 0; color: var(--muted); font-size: 13px; }
+  .row-btns { display: flex; gap: 8px; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="brand">P32</span>
+  <span class="saved" id="saved-indicator">auto-sparar</span>
+</div>
+
+<div id="tabs">
+  <button class="tab-btn active" onclick="switchTab('today')">Idag</button>
+  <button class="tab-btn" onclick="switchTab('overview')">Översikt</button>
+  <button class="tab-btn" onclick="switchTab('logg')">Logg</button>
+  <button class="tab-btn" onclick="switchTab('vikter')">Vikter</button>
+</div>
+
+<div id="content"></div>
+
+<!-- LOG MODAL -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">Logga pass</div>
+    <div class="modal-sub" id="log-modal-sub"></div>
+    <div id="log-toggles"></div>
+    <input class="field" type="text" id="log-note" placeholder="Notering (valfri)">
+    <div class="row-btns">
+      <button class="btn-secondary" onclick="closeModal('log-modal')">Avbryt</button>
+      <button class="btn-dark" onclick="completePass()">Spara &amp; nästa pass</button>
+    </div>
+  </div>
+</div>
+
+<!-- WEIGHT MODAL -->
+<div class="modal-overlay" id="weight-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">Logga vikt</div>
+    <select class="field" id="w-exercise"></select>
+    <input class="field" type="number" step="0.5" min="0" id="w-kg" placeholder="Vikt i kg (t.ex. 27.5)">
+    <input class="field" type="date" id="w-date">
+    <div class="row-btns">
+      <button class="btn-secondary" onclick="closeModal('weight-modal')">Avbryt</button>
+      <button class="btn-dark" onclick="submitWeight()">Spara vikt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const LS_KEY = "p32_v4";
+const TARGET = new Date("2025-12-10");
+const START  = new Date("2026-03-10");
+
+const ROTATION = [
+  { id:"gym_push", label:"Gym A — Övre (Push)", exercises:[
+    { name:"Incline DB Press",        dw:27.5, sets:2, reps:"8–10" },
+    { name:"Seated DB Lateral Raise", dw:8,    sets:2, reps:"12–15" },
+    { name:"Flat DB Fly",             dw:15,   sets:2, reps:"10–12" },
+    { name:"Lying Skullcrusher",      dw:25,   sets:2, reps:"10–12" },
+    { name:"Cable Pushdown",          dw:20,   sets:2, reps:"12–15" },
+    { name:"Face Pull",               dw:15,   sets:2, reps:"15–20" },
+  ]},
+  { id:"hem_hiit", label:"Hempass — KB HIIT + Intervaller", exercises:[
+    { name:"KB Swing",       sets:"6–8 rdr", reps:"10" },
+    { name:"KB Clean",       sets:"—",       reps:"5/sida" },
+    { name:"KB Push Press",  sets:"—",       reps:"5/sida" },
+    { name:"Goblet Squat",   sets:"—",       reps:"8" },
+    { name:"KB Row",         sets:"—",       reps:"8/sida" },
+    { name:"Löpintervaller 5×(1 min snabbt / 1 min lugnt)", sets:"", reps:"" },
+  ]},
+  { id:"gym_lower", label:"Gym B — Underkropp", exercises:[
+    { name:"High Bar Squat",     dw:null, sets:2, reps:"6–8" },
+    { name:"Romanian Deadlift",  dw:null, sets:2, reps:"8–10" },
+    { name:"Walking Lunges",     dw:null, sets:2, reps:"10/ben" },
+    { name:"Seated Leg Curl",    dw:null, sets:2, reps:"10–12" },
+    { name:"Standing Calf Raise",dw:null, sets:2, reps:"15–20" },
+  ]},
+  { id:"hem_flow", label:"Hempass — KB Flow + Distans", exercises:[
+    { name:"KB Clean",      sets:"3 rdr", reps:"5/sida" },
+    { name:"Front Squat",   sets:"—",     reps:"5/sida" },
+    { name:"Strict Press",  sets:"—",     reps:"5/sida" },
+    { name:"Reverse Lunge", sets:"—",     reps:"5/sida" },
+    { name:"KB Deadlift",   sets:"—",     reps:"8" },
+    { name:"Halo",          sets:"—",     reps:"5/håll" },
+    { name:"Distanslöpning 40–60 min Zon 2", sets:"", reps:"" },
+  ]},
+  { id:"gym_pull", label:"Gym A — Övre (Pull)", exercises:[
+    { name:"Barbell Row",      dw:null, sets:2, reps:"8–10" },
+    { name:"One-arm DB Row",   dw:32,   sets:2, reps:"8–10" },
+    { name:"Lat Pulldown",     dw:null, sets:2, reps:"10–12" },
+    { name:"Z-Bar Curl",       dw:32.5, sets:2, reps:"8–10" },
+    { name:"DB Hammer Curl",   dw:null, sets:2, reps:"10–12" },
+    { name:"Face Pull",        dw:null, sets:2, reps:"15–20" },
+  ]},
+  { id:"mobilitet", label:"Mobilitet / Prehab", exercises:[
+    { name:"Hip Flexor KB Raises",   sets:2, reps:"15" },
+    { name:"Seated Tibialis Raise",  sets:2, reps:"20" },
+    { name:"90/90 Hip Rotations",    sets:2, reps:"10/sida" },
+    { name:"Hip Flexor Stretch",     sets:2, reps:"45 sek" },
+    { name:"Glute Bridge Hold",      sets:2, reps:"30 sek" },
+  ]},
+];
+
+const ALL_EXERCISES = [...new Set(ROTATION.flatMap(r => r.exercises.map(e => e.name)))];
+
+function load() {
+  try { const r = localStorage.getItem(LS_KEY); if (r) return JSON.parse(r); } catch {}
+  return { logs:[], weights:{}, rotIdx:0, checklist:{} };
+}
+function save(d) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch {}
+  flash();
+}
+let D = load();
+
+function flash() {
+  const el = document.getElementById("saved-indicator");
+  el.textContent = "✓ sparat"; el.classList.add("ok");
+  setTimeout(() => { el.textContent = "auto-sparar"; el.classList.remove("ok"); }, 1500);
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0,10); }
+function daysLeft() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const t = new Date(TARGET); t.setHours(0,0,0,0);
+  return Math.max(0, Math.round((t - now)/86400000));
+}
+function progress() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const total = Math.round((TARGET - START)/86400000);
+  const done  = Math.round((now - START)/86400000);
+  return Math.min(100, Math.max(0, Math.round(done/total*100)));
+}
+function streak() {
+  if (!D.logs.length) return 0;
+  const dates = [...new Set(D.logs.map(l=>l.date))].sort((a,b)=>b.localeCompare(a));
+  let s=0, check=new Date(); check.setHours(0,0,0,0);
+  for (let d of dates) {
+    const dt=new Date(d); dt.setHours(0,0,0,0);
+    const diff=Math.round((check-dt)/86400000);
+    if (diff===0||diff===1){s++;check=dt;}else break;
+  }
+  return s;
+}
+
+// ─── CURRENT PASS ─────────────────────────────────────────────────────────────
+function currentPass() { return ROTATION[D.rotIdx % ROTATION.length]; }
+function checkKey() { return `c_${D.rotIdx}_${today()}`; }
+function checked() { return D.checklist[checkKey()] || {}; }
+
+function toggleEx(name) {
+  const ck = checkKey(); const c = {...(D.checklist[ck]||{})};
+  c[name] = !c[name];
+  D.checklist[ck] = c; save(D); renderTab();
+}
+function setWeight(name, val) {
+  const ck = checkKey(); const c = {...(D.checklist[ck]||{})};
+  c["w_"+name] = val;
+  D.checklist[ck] = c; save(D);
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+let currentTab = "today";
+
+function switchTab(t) {
+  currentTab = t;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  const idx = ["today","overview","logg","vikter"].indexOf(t);
+  document.querySelectorAll(".tab-btn")[idx].classList.add("active");
+  renderTab();
+}
+
+function renderTab() {
+  const el = document.getElementById("content");
+  if (currentTab==="today") el.innerHTML = renderToday();
+  else if (currentTab==="overview") el.innerHTML = renderOverview();
+  else if (currentTab==="logg") el.innerHTML = renderLogg();
+  else if (currentTab==="vikter") el.innerHTML = renderVikter();
+}
+
+// ─── TODAY ────────────────────────────────────────────────────────────────────
+function renderToday() {
+  const pass = currentPass();
+  const ch = checked();
+  const exes = pass.exercises;
+  const done = exes.filter(e=>ch[e.name]).length;
+  const total = exes.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  const isGymPass = pass.id !== "hem_hiit" && pass.id !== "hem_flow" && pass.id !== "mobilitet";
+
+  let rows = exes.map(ex => {
+    const isDone = !!ch[ex.name];
+    const wVal = ch["w_"+ex.name] || "";
+    // Placeholder: last logged weight > default weight > empty
+    const loggedWeights = D.weights[ex.name];
+    const lastLogged = loggedWeights && loggedWeights.length ? loggedWeights[loggedWeights.length-1].weight : null;
+    const placeholder = lastLogged !== null ? lastLogged : (ex.dw !== null && ex.dw !== undefined ? ex.dw : "");
+    const checkSVG = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5l3 3 6-7" stroke="${isDone?'#000':'#fff'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const meta = [ex.sets&&ex.sets!=="—"?ex.sets+" set":"", ex.reps].filter(Boolean).join(" · ");
+    return `
+      <div class="ex-row">
+        <div class="checkbox ${isDone?'checked':''}" onclick="toggleEx(${JSON.stringify(ex.name)})">${isDone?checkSVG:''}</div>
+        <div style="flex:1">
+          <div class="ex-name ${isDone?'done':''}">${ex.name}</div>
+          ${meta?`<div class="ex-meta">${meta}</div>`:''}
+        </div>
+        ${isGymPass?`
+          <input class="weight-input" type="number" step="0.5" placeholder="${placeholder}"
+            value="${wVal}" onchange="setWeight(${JSON.stringify(ex.name)}, this.value)"
+            oninput="setWeight(${JSON.stringify(ex.name)}, this.value)">
+          <span class="weight-unit">kg</span>
+        `:''}
+      </div>`;
+  }).join("");
+
+  const btnLabel = done===total ? "✓ Pass klart — Logga" : "Logga pass";
+  const btnStyle = done===total ? "background:#4ade80;color:#000;" : "";
+
+  return `
+    <div class="pass-header">
+      <div class="label">NÄSTA PASS</div>
+      <div class="name">${pass.label}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-text">${done} / ${total} klara</div>
+    </div>
+    <div class="card" style="padding:0 18px">
+      ${rows}
+    </div>
+    <button class="btn-primary" style="${btnStyle}" onclick="openLogModal()">${btnLabel}</button>
+  `;
+}
+
+// ─── OVERVIEW ─────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const pct = progress();
+  const dl = daysLeft();
+  const s = streak();
+  const missed = D.logs.filter(l=>!l.content).length;
+
+  const recent = D.logs.slice(0,5).map(l=>`
+    <div class="log-row">
+      <div>
+        <div class="log-type">${l.type}</div>
+        <div class="log-date">${l.date}</div>
+      </div>
+      <div class="log-dots">
+        <span>${l.shake?"🟩":"🟥"}</span>
+        <span>${l.content?"🟩":"🟥"}</span>
+        <span>${!l.onyttigheter?"🟩":"🟥"}</span>
+      </div>
+    </div>`).join("") || `<div class="empty">Inga pass ännu</div>`;
+
+  return `
+    <div class="card">
+      <div class="card-title">Räknar ner till 10 dec</div>
+      <div class="countdown-num">${dl}</div>
+      <div style="font-size:14px;color:var(--muted);margin:4px 0 16px;font-family:'DM Mono',monospace">dagar kvar</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-text" style="margin-top:8px">${pct}% av vägen · mål 85 kg</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Pass</div><div class="stat-val">${D.logs.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Streak</div><div class="stat-val">${s}<span style="font-size:14px;color:var(--muted)">d</span></div></div>
+      <div class="stat-card"><div class="stat-label">Content ✗</div><div class="stat-val" style="color:var(--red)">${missed}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Senaste pass</div>
+      ${recent}
+    </div>`;
+}
+
+// ─── LOGG ─────────────────────────────────────────────────────────────────────
+function renderLogg() {
+  if (!D.logs.length) return `<div class="empty">Inga pass loggade</div>`;
+  return D.logs.map(l=>`
+    <div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:600;font-size:14px">${l.type}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace">${l.date}</div>
+        </div>
+        <div class="log-dots">
+          <span title="Shake">${l.shake?"🟩":"🟥"}</span>
+          <span title="Content">${l.content?"🟩":"🟥"}</span>
+          <span title="Onyttigheter (bra=ingen)">${!l.onyttigheter?"🟩":"🟥"}</span>
+        </div>
+      </div>
+      ${l.note?`<div style="font-size:12px;color:var(--muted);margin-top:10px;font-style:italic">${l.note}</div>`:''}
+    </div>`).join("");
+}
+
+// ─── VIKTER ───────────────────────────────────────────────────────────────────
+function renderVikter() {
+  const entries = Object.entries(D.weights);
+  const cards = entries.length ? entries.map(([ex, data])=>{
+    const latest = data[data.length-1];
+    const prev = data[data.length-2];
+    const diff = prev ? +(latest.weight - prev.weight).toFixed(1) : null;
+    const maxW = Math.max(...data.map(e=>e.weight));
+    const minW = Math.min(...data.map(e=>e.weight));
+    const range = maxW-minW || 1;
+    const bars = data.map((e,i)=>{
+      const h = 6+((e.weight-minW)/range)*30;
+      return `<div class="bar ${i===data.length-1?'latest':''}" style="height:${h}px" title="${e.date}: ${e.weight}kg"></div>`;
+    }).join("");
+    const deltaColor = diff>0?"var(--green)":diff<0?"var(--red)":"var(--muted)";
+    return `
+      <div class="weight-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="w-name">${ex}</div>
+            <div class="w-count">${data.length} loggningar</div>
+          </div>
+          <div style="text-align:right">
+            <div class="w-val">${latest.weight}<span style="font-size:12px;color:var(--muted);margin-left:3px">kg</span></div>
+            ${diff!==null?`<div class="w-delta" style="color:${deltaColor}">${diff>0?"+":""}${diff} kg</div>`:''}
+          </div>
+        </div>
+        ${data.length>1?`<div class="bar-chart">${bars}</div>`:''}
+      </div>`;
+  }).join("") : `<div class="empty">Inga vikter loggade</div>`;
+
+  return `
+    <button class="btn-primary" onclick="openWeightModal()" style="margin-bottom:12px">+ Logga vikt</button>
+    ${cards}`;
+}
+
+// ─── LOG MODAL ────────────────────────────────────────────────────────────────
+let logState = { shake:false, content:false, onyttigheter:false };
+
+function openLogModal() {
+  logState = { shake:false, content:false, onyttigheter:false };
+  document.getElementById("log-modal-sub").textContent = currentPass().label;
+  document.getElementById("log-note").value = "";
+  renderLogToggles();
+  document.getElementById("log-modal").classList.add("open");
+}
+function renderLogToggles() {
+  const items = [["shake","🥤 Shake tagen"],["content","🎥 Content fångad"],["onyttigheter","🍬 Onyttigheter"]];
+  document.getElementById("log-toggles").innerHTML = items.map(([k,l])=>{
+    const isDone = logState[k];
+    const svg = isDone?`<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5l3 3 6-7" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`:'';
+    return `<div class="toggle-row" onclick="toggleLogItem('${k}')">
+      <div class="checkbox ${isDone?'checked':''}">${svg}</div>
+      <span class="toggle-label">${l}</span>
+    </div>`;
+  }).join("");
+}
+function toggleLogItem(k) {
+  logState[k] = !logState[k];
+  renderLogToggles();
+}
+function completePass() {
+  const entry = {
+    id: Date.now(),
+    type: currentPass().label,
+    date: today(),
+    shake: logState.shake,
+    content: logState.content,
+    onyttigheter: logState.onyttigheter,
+    note: document.getElementById("log-note").value,
+  };
+  const ck = checkKey();
+  const ch = D.checklist[ck] || {};
+  // Auto-save any weights filled in during the pass
+  const newWeights = {...D.weights};
+  currentPass().exercises.forEach(ex => {
+    const val = ch["w_"+ex.name];
+    if (val && parseFloat(val)) {
+      const kg = parseFloat(val);
+      const dt = today();
+      const prev = newWeights[ex.name] || [];
+      newWeights[ex.name] = [...prev.filter(e=>e.date!==dt), {weight:kg, date:dt}]
+        .sort((a,b)=>a.date.localeCompare(b.date));
+    }
+  });
+  const cl = {...D.checklist}; delete cl[ck];
+  D.logs = [entry, ...D.logs];
+  D.rotIdx = (D.rotIdx + 1) % ROTATION.length;
+  D.checklist = cl;
+  D.weights = newWeights;
+  save(D);
+  closeModal("log-modal");
+  renderTab();
+}
+
+// ─── WEIGHT MODAL ─────────────────────────────────────────────────────────────
+function openWeightModal() {
+  const sel = document.getElementById("w-exercise");
+  sel.innerHTML = ALL_EXERCISES.map(e=>`<option>${e}</option>`).join("");
+  document.getElementById("w-kg").value = "";
+  document.getElementById("w-date").value = today();
+  document.getElementById("weight-modal").classList.add("open");
+}
+function submitWeight() {
+  const ex  = document.getElementById("w-exercise").value;
+  const kg  = parseFloat(document.getElementById("w-kg").value);
+  const dt  = document.getElementById("w-date").value;
+  if (!kg || !ex) return;
+  const prev = D.weights[ex] || [];
+  const updated = [...prev.filter(e=>e.date!==dt), {weight:kg,date:dt}]
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  D.weights[ex] = updated;
+  save(D);
+  closeModal("weight-modal");
+  renderTab();
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-overlay").forEach(m => {
+  m.addEventListener("click", e => { if (e.target===m) m.classList.remove("open"); });
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderTab();
+</script>
+</body>
+</html>
